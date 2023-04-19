@@ -149,7 +149,7 @@ TrackedObject::Ptr callInitServiceAndCreateObject(ColorCloudPtr cloud, cv::Mat i
   bulletsim_msgs::Initialization init;
   pcl::toROSMsg(*scaleCloud(cloud, 1/METERS), init.request.cloud);
   init.request.cloud.header.frame_id = "/ground";
-	
+   	
   bool success = ros::service::call(initializationService, init);
   if (success)
   	return toTrackedObject(init.response.objectInit, cloud, image, mask, transformer);

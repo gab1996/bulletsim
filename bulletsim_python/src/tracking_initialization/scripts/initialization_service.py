@@ -7,30 +7,38 @@ parser.add_argument("--save_requests", action="store_true")
 parser.add_argument("--load_request", type=str)
 args = parser.parse_args()
 
+import sys
+sys.path.append('/usr/ws/src/bulletsim/bulletsim_python/src')
 
 import roslib
-roslib.load_manifest("bulletsim_python")
-from brett2.ros_utils import pc2xyzrgb
+# roslib.load_manifest("bulletsim_python")
+
+
 import bulletsim_msgs.srv as bs
 import bulletsim_msgs.msg as bm
 import geometry_msgs.msg as gm
 import rospy
-from brett2.ros_utils import RvizWrapper
+
 from tracking_initialization.rope_initialization import find_path_through_point_cloud
 from tracking_initialization.object_recognition_lol import determine_object_type
 import numpy as np
 import cv2
-import cPickle, time
+import time
 marker_handles = {}
-
+def pc2xyzrgb(pc): 
+    arr = np.fromstring(pc.data,dtype='float32').reshape(pc.height,pc.width,pc.point_step/4)
+    xyz = arr[:,:,0:3] 
+    rgb0 = np.ndarray(buffer=arr[:,:,4].copy(),shape=(pc.height, pc.width,4),dtype='uint8') 
+    rgb = rgb0[:,:,0:3] 
+    return xyz,rgb
 def handle_initialization_request(req):
     "rope initialization service"
     
-    if args.save_requests:
-        fname = "/tmp/init_req_%i.pkl"%time.time()
-        with open(fname,"w") as fh:
-            cPickle.dump(req, fh)
-            print "saved", fname
+    # if args.save_requests:
+    #     fname = "/tmp/init_req_%i.pkl"%time.time()
+    #     with open(fname,"w") as fh:
+    #         cPickle.dump(req, fh)
+    #         print "saved", fname
     
     xyz, _ = pc2xyzrgb(req.cloud)
     xyz = np.squeeze(xyz)

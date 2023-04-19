@@ -140,7 +140,7 @@ public:
     if (!m_inited) {
     	initTable(cloud_in);
     }
-
+std::cout<<"aaaaaa"<<endl;
     if (first_count>0) {
     	rgb_bg.push_back(toCVMatImage(cloud_in));
     	depth_bg.push_back(toCVMatDepthImage(cloud_in));
@@ -153,11 +153,12 @@ public:
 				fs << "rgb_image_" + itoa(first_count, 2) << rgb_bg;
 				if (first_count == 1) fs.release();
 			}
-
+    
     	first_count--;
     	return;
+      
     }
-
+    std::cout<<"ciao"<<endl;
     cv::Mat rgb = toCVMatImage(cloud_in);
     cv::Mat depth = toCVMatDepthImage(cloud_in);
 
@@ -177,10 +178,13 @@ public:
 		cv::Mat image = toCVMatImage(cloud_out);
 
 		if (LocalConfig::removeOutliers) cloud_out = removeOutliers(cloud_out, 1, 10);
+    
 		if (LocalConfig::downsample > 0) cloud_out = downsampleCloud(cloud_out, LocalConfig::downsample);
-		if (LocalConfig::outlierMinK > 0) cloud_out = removeRadiusOutliers(cloud_out, LocalConfig::outlierRadius, LocalConfig::outlierMinK);
+		if (LocalConfig::outlierMinK > 0) cloud_out = removeRadiusOutliers(cloud_out, LocalConfig::outlierRadius, LocalConfig::outlierMinK); 
+    std::cout<<cloud_out.get()->size()<<endl;
+    std::cout<<"dio cane"<<endl;
 		if (LocalConfig::clusterMinSize > 0) cloud_out = clusterFilter(cloud_out, LocalConfig::clusterTolerance, LocalConfig::clusterMinSize);
-
+   
 		//Publish cloud
     sensor_msgs::PointCloud2 msg_out;
 		pcl::toROSMsg(*cloud_out, msg_out);
