@@ -38,12 +38,21 @@ std::vector<btVector3> calcImpulsesDamped(const std::vector<btVector3>& estPos, 
   assert(corr.cols() == N);
   assert(masses.size() == K);
   vector<btVector3> impulses(K);
-
+  
   for (int k=0; k<K; k++) {
   	btVector3 dv = -kd * estVel[k];
+
   	for (int n=0; n<N; n++)
-			dv += (kp * corr(k,n)) * (obsPts[n] - estPos[k]);
+			{dv += (kp * corr(k,n)) * (obsPts[n] - estPos[k]);
+			if (k==0){
+				//cout<<corr(k,n)<<endl;
+			}
+			// btVector3 dist = obsPts[n] - estPos[k];
+			//cout<<"X"<<dist.getX()<<"Y"<<dist.getY()<<"Z"<<dist.getZ()<<endl;
+			}
+	   // cout<<"X "<<estPos[k].getX()<<" Y "<<estPos[k].getY()<<" Z "<<estPos[k].getZ()<<endl;
 		impulses[k] = masses[k]*dv;
+
 		// XXX SHOULD THERE BE DT?
   }
 
@@ -51,7 +60,7 @@ std::vector<btVector3> calcImpulsesDamped(const std::vector<btVector3>& estPos, 
 //  for (int k=0; k<K; k++) {
 //  	if (impulses[k].length2() > max_impulse*max_impulse) {
 //  		impulses[k].normalize();
-//			impulses[k] *= max_impulse;
+// 			impulses[k] *= max_impulse;
 //  	}
 //  }
 //  cout << "max impulse mag " << max(impulses).length() << endl;

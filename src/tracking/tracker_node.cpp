@@ -54,22 +54,26 @@ bool pending = false; // new message received, waiting to be processed
 tf::TransformListener* listener;
 
 void callback(const vector<sensor_msgs::PointCloud2ConstPtr>& cloud_msg, const vector<sensor_msgs::ImageConstPtr>& image_msgs) {
+ // std::cout<<"dai"<<std::endl;
   if (rgb_images.size()!=nCameras) rgb_images.resize(nCameras);
   if (mask_images.size()!=nCameras) mask_images.resize(nCameras);
   if (depth_images.size()!=nCameras) depth_images.resize(nCameras);
-
   assert(image_msgs.size() == 2*nCameras);
   for (int i=0; i<nCameras; i++) {
   	// merge all the clouds progressively
   	ColorCloudPtr cloud(new ColorCloud);
+    //std::cout<<"andamo1"<<std::endl;
 		pcl::fromROSMsg(*cloud_msg[i], *cloud);
+    //std::cout<<"andamo"<<std::endl;
 		pcl::transformPointCloud(*cloud, *cloud, transformers[i]->worldFromCamEigen);
+    
+  
 
 		if (i==0) *filteredCloud = *cloud;
   	else *filteredCloud = *filteredCloud + *cloud;
 
-		extractImageAndMask(cv_bridge::toCvCopy(image_msgs[2*i])->image, rgb_images[i], mask_images[i]);
-  	depth_images[i] = cv_bridge::toCvCopy(image_msgs[2*i+1])->image;
+		extractImageAndMask(cv_bridge::toCvCopy(image_msgs[2*i],"8UC4")->image, rgb_images[i], mask_images[i]);
+  	depth_images[i] = cv_bridge::toCvCopy(image_msgs[2*i+1],"32FC1")->image;
   }
   filteredCloud = downsampleCloud(filteredCloud, TrackingConfig::downsample*METERS);
   //filteredCloud = filterZ(filteredCloud, -0.1*METERS, 0.20*METERS);
@@ -80,10 +84,10 @@ void callback(const vector<sensor_msgs::PointCloud2ConstPtr>& cloud_msg, const v
 int main(int argc, char* argv[]) {
   Eigen::internal::setNbThreads(2);
 
-  GeneralConfig::scale = 100;
+  GeneralConfig::scale = 1;
   BulletConfig::maxSubSteps = 0;
-  BulletConfig::gravity = btVector3(0,0,-0.1);
-
+  // BulletConfig::gravity = btVector3(0,0,-0.1);
+  BulletConfig::gravity = btVector3(0,0,0);
   Parser parser;
   parser.addGroup(TrackingConfig());
   parser.addGroup(GeneralConfig());
@@ -97,11 +101,23 @@ int main(int argc, char* argv[]) {
   ros::init(argc, argv,"tracker_node");
   ros::NodeHandle nh;
 
-  listener = new tf::TransformListener();
+  // listener = new tf::TransformListener();
+  //tf::TransformListener listener;
+  // for (int i=0; i<nCameras; i++)
+   	//transformers.push_back(new CoordinateTransformer(waitForAndGetTransform(*listener, "/ground", TrackingConfig::cameraTopics[i]+"_rgb_optical_frame")));
 
-  for (int i=0; i<nCameras; i++)
-  	transformers.push_back(new CoordinateTransformer(waitForAndGetTransform(*listener, "/ground", TrackingConfig::cameraTopics[i]+"_rgb_optical_frame")));
+  tf::StampedTransform s_mio;
+  // // btTransform()
+  s_mio.frame_id_="/ground";
+  s_mio.child_frame_id_="/kinect1_rgb_optical_frame";
+  s_mio.stamp_=ros::Time(0);
+  s_mio.setOrigin(tf::Vector3(0.643, 0.025, 0.650));
+  s_mio.setRotation(tf::Quaternion(0.837,0.224,-0.129,-0.483));
 
+  //listener.waitForTransform(s_mio.frame_id_,"/kinect1_rgb_optical_frame", ros::Time(0),ros::Duration(.1));
+	//listener.lookupTransform(s_mio.frame_id_,"/kinect1_rgb_optical_frame", ros::Time(0), s_mio);
+  transformers.push_back(new CoordinateTransformer(s_mio.asBt()));
+  //cout<<transformers[0]->camFromWorldEigen.rotation()<<endl;
 	vector<string> cloud_topics;
 	vector<string> image_topics;
   for (int i=0; i<nCameras; i++) {
@@ -110,9 +126,12 @@ int main(int argc, char* argv[]) {
 		image_topics.push_back("/preprocessor" + TrackingConfig::cameraTopics[i] + "/depth");
   }
 	synchronizeAndRegisterCallback(cloud_topics, image_topics, nh, callback);
+  //cout<<METERS<<endl;
 
-  ros::Publisher objPub = nh.advertise<bulletsim_msgs::TrackedObject>(trackedObjectTopic,10);
-
+  ros::Publisher objPub = nh.advertise<bulletsim_msgs::TrackedObject>(trackedObjectTopic,1000);
+  //std::cout<<"dio"<<std::endl;
+  // ros::topic::waitForMessage<PointCloud2>("/preprocessor/kinect1/points",nh);
+  //std::cout<<"cane"<<std::endl;
   // wait for first message, then initialize
   while (!pending) {
     ros::spinOnce();
@@ -134,14 +153,23 @@ int main(int argc, char* argv[]) {
   } else if (TrackingConfig::playback_camera_pos_file != "") {
     camsync.enable(CamSync::PLAYBACK, TrackingConfig::playback_camera_pos_file);
   }
+  // cout<<transformers[0]->camFromWorldUnscaled.getOrigin().getX()<<endl;
+  // cout<<transformers[0]->camFromWorldUnscaled.getOrigin().getY()<<endl;
+  // cout<<transformers[0]->camFromWorldUnscaled.getOrigin().getZ()<<endl;
+  // cout<<transformers[0]->worldFromCamUnscaled.getRotation()<<endl;
+  // cout<<transformers[0]->worldFromCamUnscaled.getOrigin()<<endl;
+  // cout<<transformers[0]->worldFromCamUnscaled.getOpenGLMatrix()<<endl;
 
+  
   ViewerConfig::cameraHomePosition = transformers[0]->worldFromCamUnscaled.getOrigin();
   ViewerConfig::cameraHomeCenter = ViewerConfig::cameraHomePosition + transformers[0]->worldFromCamUnscaled.getBasis().getColumn(2);
   ViewerConfig::cameraHomeUp = -transformers[0]->worldFromCamUnscaled.getBasis().getColumn(1);
   scene.startViewer();
 	TrackedObject::Ptr trackedObj = callInitServiceAndCreateObject(filteredCloud, rgb_images[0], mask_images[0], transformers[0]);
   if (!trackedObj) throw runtime_error("initialization of object failed.");
+
   trackedObj->init();
+  //std::cout<<"provaa"<<endl;
   scene.env->add(trackedObj->m_sim);
 
  	// actual tracking algorithm
@@ -176,6 +204,7 @@ int main(int argc, char* argv[]) {
 
   scene.setSyncTime(false);
   scene.setDrawing(true);
+  int count=0;
   while (!exit_loop && ros::ok()) {
   	//Update the inputs of the featureExtractors and visibilities (if they have any inputs)
   	cloudFeatures->updateInputs(filteredCloud, rgb_images[0], transformers[0]);
@@ -184,6 +213,7 @@ int main(int argc, char* argv[]) {
     pending = false;
     while (ros::ok() && !pending) {
     	//Do iteration
+      //cout<<"a"<<endl;
       alg->updateFeatures();
       alg->expectationStep();
       alg->maximizationStep(applyEvidence);
@@ -192,7 +222,13 @@ int main(int argc, char* argv[]) {
 
       scene.step(.03,2,.015);
       ros::spinOnce();
+      //objPub.publish(toTrackedObjectMessage(trackedObj));
     }
     objPub.publish(toTrackedObjectMessage(trackedObj));
+    count=count+1;
+    std::cout<<count<<endl;
+
+    
+
  	}
 }

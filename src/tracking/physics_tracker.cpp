@@ -39,8 +39,11 @@ void PhysicsTracker::updateFeatures() {
 	m_estPts = m_objFeatures->getFeatures();
 	m_obsPts = m_obsFeatures->getFeatures();
 
-	m_vis = m_visInt->checkNodeVisibility(m_objFeatures->m_obj);
-}
+    m_vis = m_visInt->checkNodeVisibility(m_objFeatures->m_obj);
+	// m_vis.fill(1);
+	// cout<<m_vis<<endl;
+	// cout<<"----"<<endl;
+ }
 
 void PhysicsTracker::expectationStep() {
 

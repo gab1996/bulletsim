@@ -235,7 +235,8 @@ Eigen::MatrixXf calculateResponsibilities(const Eigen::MatrixXf& estPts, const E
 	int K = estPts.rows(); //nodes
 	int N = obsPts.rows(); //observations
 	int F = estPts.cols(); //features
-
+	
+    
 	assert(obsPts.cols() == F);
 	assert(stdev.rows() == K);
 	assert(stdev.cols() == F);
@@ -279,11 +280,21 @@ Eigen::MatrixXf calculateResponsibilities(const Eigen::MatrixXf& estPts, const E
 
 		//normalize cols
 		pZgivenC = pZgivenC * ((VectorXf) pZgivenC.colwise().sum().array().inverse()).asDiagonal();
+		// cout<<"*************"<<endl;
+		// cout<<pZgivenC.rows()<<endl;
+		// cout<<"-------------"<<endl;
+		// cout<<pZgivenC.cols()<<endl;
+		// cout<<"##############"<<endl;
+
 	}
 
 	//assert(isFinite(pZgivenC));
 	assert(pZgivenC.rows() == K+1);
 	assert(pZgivenC.cols() == N);
+	// cout<<pZgivenC<<endl;
+	// cout<<pZgivenC.rows()<<endl;
+	// cout<<pZgivenC.cols()<<endl;
+	// cout<<"----------"<<endl;
 	return pZgivenC.topRows(K);
 }
 

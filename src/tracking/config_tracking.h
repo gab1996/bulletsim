@@ -29,6 +29,8 @@ struct TrackingConfig : Config {
   static float kd_cloth;
   static float kp_box;
   static float kd_box;
+  static float kp_insole;
+  static float kd_insole;
 
   static float tracked_node_distance;
   static float node_distance;

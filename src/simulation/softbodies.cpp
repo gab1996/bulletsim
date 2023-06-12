@@ -370,8 +370,12 @@ void BulletSoftObject::setTexture(cv::Mat image, const btTransform& camFromWorld
 	tritexcoords = new osg::Vec2Array;
 	for (int j=0; j<faces.size(); j++) {
 		for (int c=0; c<3; c++) {
+      //cout<<faces[j].m_n[c]->m_x.m_floats[0]<<" "<<faces[j].m_n[c]->m_x.m_floats[1]<<" "<<faces[j].m_n[c]->m_x.m_floats[2]<<" "<<faces[j].m_n[c]->m_x.m_floats[3]<<endl;
 			btVector3 xyz = camFromWorld * faces[j].m_n[c]->m_x;
+      //cout<<xyz.m_floats[0]<<" "<<xyz.m_floats[1]<<" "<<xyz.m_floats[2]<<" "<<xyz.m_floats[3]<<endl;
 			cv::Point2f uv = xyz2uv(xyz);
+      //cout<<uv.x<<" "<<uv.y<<endl;
+      //cout<<"-----------"<<endl;
 			tritexcoords->push_back(osg::Vec2f(uv.x/(float)(image.cols-1), 1.0-uv.y/(float)(image.rows-1)));
 		}
 	}
@@ -400,7 +404,7 @@ void BulletSoftObject::adjustTransparency(float increment) {
 }
 
 int BulletSoftObject::getIndex(const btTransform& transform) {
-	const btVector3 pos = transform.getOrigin();
+	const btVector3 pos = transform.getOrigin(); 
 	const btSoftBody::tFaceArray& faces = softBody->m_faces;
 	int j_nearest = -1;
 	float nearest_length2 = DBL_MAX;

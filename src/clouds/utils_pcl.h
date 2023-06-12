@@ -21,6 +21,8 @@ ColorCloudPtr readPCD(const std::string& pcdfile);
 
 Eigen::MatrixXi xyz2uv(const Eigen::MatrixXf& xyz);
 inline cv::Point2f xyz2uv(const btVector3& point) {
+ // std::cout<<cx<<std::endl;
+  //std::cout<<cy<<std::endl;
   return cv::Point2f(f*point.x()/point.z() + cx, f*point.y()/point.z() + cy);
 }
 

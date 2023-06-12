@@ -25,7 +25,10 @@ float TrackingConfig::kp_cloth = 1500;
 float TrackingConfig::kd_cloth = 15;
 float TrackingConfig::kp_box = 15;
 float TrackingConfig::kd_box = 0.2;
-
+// float TrackingConfig::kp_insole = 1;
+// float TrackingConfig::kd_insole = 0.5;
+float TrackingConfig::kp_insole = 15;
+float TrackingConfig::kd_insole = 0.2;
 float TrackingConfig::tracked_node_distance = 0.05;
 float TrackingConfig::node_distance = 0.01; // 1 cm between nodes
 float TrackingConfig::surface_density = 0.01/(0.1*0.1); // 10 grams per 100 cm2

@@ -286,6 +286,7 @@ void TrackedTowel::initColors() {
 	if (!tex_image.empty()) {
 		cout << "initColors using texture" << endl;
 		const osg::Vec2Array& texcoords = *(getSim()->tritexcoords);
+		//cout<<"provazz"<<endl;
 		for (int i=0; i < m_nNodes; i++) {
 			cv::Point2f pixel = textureCoordinate(i);
 			int i_pixel = pixel.y;

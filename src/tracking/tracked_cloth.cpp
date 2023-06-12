@@ -43,23 +43,31 @@ inline cv::Point2f TrackedCloth::getTexCoord(const int& nodeIdx) {
 void TrackedCloth::applyEvidence(const Eigen::MatrixXf& corr, const Eigen::MatrixXf& obsPts) {
   vector<btVector3> estPos(m_nNodes);
   vector<btVector3> estVel(m_nNodes);
-  
+
   btAlignedObjectArray<btSoftBody::Node>& verts = getSim()->softBody->m_nodes;
+
   for (int iNode=0; iNode < m_nNodes; ++iNode)  {
     estPos[iNode] = verts[m_node2vert[iNode]].m_x;
     estVel[iNode] = verts[m_node2vert[iNode]].m_v;
   }
-
-  vector<btVector3> nodeImpulses = calcImpulsesDamped(estPos, estVel, toBulletVectors(obsPts), corr, toVec(m_masses), TrackingConfig::kp_cloth, TrackingConfig::kd_cloth);
-
+//   cout<<estVel.size()<<endl;
+//   for(int i=0;i<estVel.size();i++){
+// 	cout<<estVel[i]<<endl;
+// 	cout<<i<<endl;
+//   }
+//   cout<<"kp"<<TrackingConfig::kp_cloth<<endl;
+//   cout<<"kd"<<TrackingConfig::kd_cloth<<endl;
+  
+  // vector<btVector3> nodeImpulses = calcImpulsesDamped(estPos, estVel, toBulletVectors(obsPts), corr, toVec(m_masses),TrackingConfig::kp_cloth, TrackingConfig::kd_cloth);
+  vector<btVector3> nodeImpulses = calcImpulsesDamped(estPos, estVel, toBulletVectors(obsPts), corr, toVec(m_masses),TrackingConfig::kp_insole, TrackingConfig::kd_insole);
   int nVerts = verts.size();
+//   cout<<"vertici: "<<nVerts<<endl;
 
   for (int iVert=0; iVert < nVerts; iVert++) {
     btVector3 impulse(0,0,0);
     BOOST_FOREACH(int iNode, m_vert2nodes[iVert]) impulse += nodeImpulses[iNode];
     impulse/= m_vert2nodes[iVert].size();
     getSim()->softBody->addForce(impulse, iVert);
-
     assert(isfinite(impulse.x()) && isfinite(impulse.y()) && isfinite(impulse.z()));
   }
 }
@@ -83,17 +91,18 @@ vector<btVector3> TrackedCloth::getNormals() {
 void TrackedCloth::initColors() {
 	m_colors.resize(m_nNodes, 3);
 	cv::Mat tex_image = getSim()->getTexture();
+
 	if (!tex_image.empty()) {
 		cout << "initColors using texture" << endl;
 		for (int i=0; i < m_nNodes; i++) {
+			// cout<<m_nNodes<<endl;
 			cv::Point2f pixel = getTexCoord(i);
 			int i_pixel = pixel.y;
 			int j_pixel = pixel.x;
 			int range = 20;
 			//TODO weighted average window
-//			printf("tex image: %i %i %i %i\n", tex_image.rows, tex_image.cols, i_pixel, j_pixel);
+			// printf("tex image: %i %i %i %i\n", tex_image.rows, tex_image.cols, i_pixel, j_pixel);
 			cv::Mat window_pixels = windowRange(tex_image, i_pixel, j_pixel, range, range);
-
 			Vector3f bgr = toEigenMatrixImage(window_pixels).colwise().mean();
 			m_colors.row(i) = bgr.transpose();
 		}

@@ -10,7 +10,8 @@ using namespace Eigen;
 
 static const float DEPTH_OCCLUSION_DIST = .03;
 static const float RAY_SHORTEN_DIST = .1;
-static const float MIN_DEPTH = .4;
+//static const float MIN_DEPTH = .4;
+static const float MIN_DEPTH = .1;
 
 VectorXf EverythingIsVisible::checkNodeVisibility(TrackedObject::Ptr obj) {
   return VectorXf::Ones(obj->m_nNodes);
@@ -24,14 +25,17 @@ VectorXf DepthImageVisibility::checkNodeVisibility(TrackedObject::Ptr obj) {
   VectorXf vis(ptsCam.rows(),true);
 
   assert(m_depth.type() == CV_32FC1);
-  float occ_dist = DEPTH_OCCLUSION_DIST*METERS;
-
+  float occ_dist = DEPTH_OCCLUSION_DIST*METERS; 
+//   cout<<occ_dist<<endl;
+//   cout<<ptsCam.size()<<endl;
   for (int iPt=0; iPt<ptsCam.rows(); ++iPt) {
     int u = uvs(iPt,0);
     int v = uvs(iPt,1);
     if (u<m_depth.rows && v<m_depth.cols && u>0 && v>0) {
-      vis[iPt] = !isfinite(m_depth.at<float>(u,v)) || (m_depth.at<float>(u,v) + occ_dist > ptDists[iPt]);
+     vis[iPt] = !isfinite(m_depth.at<float>(u,v)) || (m_depth.at<float>(u,v) + occ_dist > ptDists[iPt]);
     // see it if there's no non-rope pixel in front of it
+	// vis[iPt]=1;
+	//cout<<vis[iPt]<<endl;
     }
   }
   return vis;
@@ -94,10 +98,15 @@ BulletRaycastVisibility::BulletRaycastVisibility(btDynamicsWorld* world, Coordin
 VectorXf BulletRaycastVisibility::checkNodeVisibility(TrackedObject::Ptr obj) {
 	vector<btVector3> nodes = obj->getPoints();
 	btVector3 cameraPos = m_transformer->worldFromCamUnscaled.getOrigin()*METERS;
+	// cout<<cameraPos.getX()<<endl;
+	// cout<<cameraPos.getY()<<endl;
+	// cout<<cameraPos.getZ()<<endl;
+	// cout<<"--"<<endl;
 	VectorXf vis(nodes.size());
 
 	float ray_shorten_dist = RAY_SHORTEN_DIST*METERS;
 	float min_depth = MIN_DEPTH*METERS;
+	int count_nonvis=0;
 
 #ifdef PLOT_RAYCAST
     static PlotLines::Ptr rayTestLines;
@@ -116,10 +125,15 @@ VectorXf BulletRaycastVisibility::checkNodeVisibility(TrackedObject::Ptr obj) {
 	for (int i=0; i < nodes.size(); ++i) {
 	  btVector3 rayDir = (nodes[i] - cameraPos).normalized();
 		btVector3 rayEnd = nodes[i] - ray_shorten_dist * rayDir;
+		// cout<<rayEnd<<endl;
 		btVector3 rayStart = cameraPos + min_depth * rayDir;
+		// cout<<rayStart<<endl;
 		btCollisionWorld::ClosestRayResultCallback rayCallback(rayStart, rayEnd);
 		m_world->rayTest(rayStart, rayEnd, rayCallback);
 		vis[i] = !rayCallback.hasHit();
+		// cout<<vis[i]<<endl;
+		// cout<<"-----------------------------"<<endl;
+
 
 #ifdef PLOT_RAYCAST
 		if (rayCallback.hasHit()) hitPoints.push_back(rayCallback.m_hitPointWorld);
@@ -130,5 +144,13 @@ VectorXf BulletRaycastVisibility::checkNodeVisibility(TrackedObject::Ptr obj) {
 #ifdef PLOT_RAYCAST
 	rayTestLines->setPoints(linePoints);
 #endif
+    for (int i=0; i < nodes.size(); ++i) {
+		if(vis[i]==0){
+			count_nonvis=count_nonvis+1;
+		}
+	}
+	// cout<<"Nodi non visibili: "<<count_nonvis<<endl;
+	// cout<<"----"<<endl;
+
 	return vis;
 }
