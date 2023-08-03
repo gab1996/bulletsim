@@ -43,13 +43,20 @@ inline cv::Point2f TrackedCloth::getTexCoord(const int& nodeIdx) {
 void TrackedCloth::applyEvidence(const Eigen::MatrixXf& corr, const Eigen::MatrixXf& obsPts) {
   vector<btVector3> estPos(m_nNodes);
   vector<btVector3> estVel(m_nNodes);
-
+  //estVel_mio(m_nNodes);
+  estVel_mio.clear();
   btAlignedObjectArray<btSoftBody::Node>& verts = getSim()->softBody->m_nodes;
-
+  
   for (int iNode=0; iNode < m_nNodes; ++iNode)  {
     estPos[iNode] = verts[m_node2vert[iNode]].m_x;
     estVel[iNode] = verts[m_node2vert[iNode]].m_v;
+	estVel_mio.push_back(estVel[iNode]);
+	// std::cout<<estVel[iNode]<<std::endl;
   }
+  
+  //std::cout<<estVel_mio->size()<<std::endl;
+  
+//   std::cout<<estVel_mio->size()<<std::endl;
 //   cout<<estVel.size()<<endl;
 //   for(int i=0;i<estVel.size();i++){
 // 	cout<<estVel[i]<<endl;

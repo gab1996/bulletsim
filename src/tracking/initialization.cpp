@@ -86,14 +86,14 @@ TrackedObject::Ptr toTrackedObject(const bulletsim_msgs::ObjectInit& initMsg, Co
 	  return tracked_towel;
   }
   else if(initMsg.type=="custom_2d"){
-                  float mass_insole=0.1;
+                //   float mass_insole=0.1;
                   btSoftBodyWorldInfo unusedWorldInfo;
                   btScalar*	vertices=new btScalar[339];
                   int triangles[531];
                   FILE *fd;
 				  FILE *fp;
-                  fd=fopen("/usr/ws/vertex.txt", "r"); 
-                  fp=fopen("/usr/ws/triangle.txt", "r"); 
+                  fd=fopen("/usr/ws/vertex_GF.txt", "r"); 
+                  fp=fopen("/usr/ws/triangle_GF.txt", "r"); 
                   if( fd==NULL || fp==NULL) {
                        perror("Errore in apertura del file");
                        exit(1);
@@ -110,13 +110,17 @@ TrackedObject::Ptr toTrackedObject(const bulletsim_msgs::ObjectInit& initMsg, Co
             
                   fclose(fd);
 				  fclose(fp);
+
                   int ntriangles =177;
                   btSoftBody* psb=btSoftBodyHelpers::CreateFromTriMesh(unusedWorldInfo,vertices,triangles,ntriangles,true);
                   btSoftBody::Material* pm=psb->appendMaterial();
-                  pm->m_kLST = 0.4;
-                  psb->generateBendingConstraints(3,pm);
-                  psb->setTotalMass(mass_insole);
-                    
+                  pm->m_kLST = TrackingConfig::kl_insole;
+                  psb->generateBendingConstraints(TrackingConfig::n_nodes_bending,pm);
+                  psb->setTotalMass(TrackingConfig::mass_insole);
+
+
+
+
                   psb->generateClusters(16);
                   psb->getCollisionShape()->setMargin(0.001*METERS);
                     
@@ -133,7 +137,7 @@ TrackedObject::Ptr toTrackedObject(const bulletsim_msgs::ObjectInit& initMsg, Co
   	                   sim->setTexture(image, toBulletTransform(transformer->camFromWorldEigen));
                   
 	                  //Shift the whole cloth upwards in case some of it starts below the table surface
-	              sim->softBody->translate(btVector3(0,0,0.01*METERS));
+	            //   sim->softBody->translate(btVector3(0,0,1));
 
 
 	              TrackedCloth::Ptr tracked_insole(new TrackedCloth(sim,0,0,0,0));
@@ -148,7 +152,7 @@ TrackedObject::Ptr toTrackedObject(const bulletsim_msgs::ObjectInit& initMsg, Co
 		sim->setColor(1,1,1,1);
 
 	    //Shift the whole sponge upwards in case some of it starts below the table surface
-	    sim->softBody->translate(btVector3(0,0,0.01*METERS));
+	    sim->softBody->translate(btVector3(0,0,1*METERS));
 
 		TrackedSponge::Ptr tracked_sponge(new TrackedSponge(sim));
 		return tracked_sponge;

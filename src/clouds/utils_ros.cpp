@@ -103,11 +103,11 @@ void synchronizeAndRegisterCallback(std::vector<std::string> cloud_topics, std::
 {
 	vector<message_filters::Subscriber<PointCloud2>*> cloud_subs(cloud_topics.size(), NULL);
 	for (int i=0; i<cloud_topics.size(); i++)
-		cloud_subs[i] = new message_filters::Subscriber<PointCloud2>(nh, cloud_topics[i], 5);
+		cloud_subs[i] = new message_filters::Subscriber<PointCloud2>(nh, cloud_topics[i], 1000,ros::TransportHints().tcpNoDelay(true));
 
 	vector<message_filters::Subscriber<Image>*> image_subs(image_topics.size(), NULL);
 	for (int i=0; i<image_topics.size(); i++)
-		image_subs[i] = new message_filters::Subscriber<Image>(nh, image_topics[i], 5);
+		image_subs[i] = new message_filters::Subscriber<Image>(nh, image_topics[i], 1000,ros::TransportHints().tcpNoDelay(true));
 
   if (cloud_topics.size()==1 && image_topics.size()==2) {
   	typedef message_filters::sync_policies::ApproximateTime<PointCloud2, Image, Image> ApproxSyncPolicy;

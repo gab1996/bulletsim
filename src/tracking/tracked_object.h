@@ -37,6 +37,7 @@ public:
   virtual const Eigen::VectorXf getOutlierStdev() { return Eigen::VectorXf::Constant(3, TrackingConfig::pointPriorDist*METERS); }
   virtual void applyEvidence(const Eigen::MatrixXf& corr, const Eigen::MatrixXf& obsPts) = 0;
   virtual EnvironmentObject* getSim()=0;
+  vector<btVector3> estVel_mio;
 };
 
 class TrackedRope : public TrackedObject { 
@@ -68,6 +69,7 @@ public:
   BulletSoftObject* getSim() {return dynamic_cast<BulletSoftObject*>(m_sim.get());};
   void initColors();
   float m_sx, m_sy; //towel dimensions
+
 
 protected:
   std::vector<int> m_node2vert; // maps node index to bullet vertex index

@@ -29,8 +29,17 @@ struct TrackingConfig : Config {
   static float kd_cloth;
   static float kp_box;
   static float kd_box;
+
   static float kp_insole;
   static float kd_insole;
+  static float kl_insole;
+  static float mass_insole;
+  static int n_nodes_bending;
+
+
+
+
+
 
   static float tracked_node_distance;
   static float node_distance;
@@ -70,5 +79,15 @@ struct TrackingConfig : Config {
 
         params.push_back(new Parameter<std::string>("record_camera_pos_file", &record_camera_pos_file, "file to save the camera positions to"));
         params.push_back(new Parameter<std::string>("playback_camera_pos_file", &playback_camera_pos_file, "file to read and playback camera positions from"));
+
+        params.push_back(new Parameter<float>("kp_insole", &kp_insole, "proportional gain for insole"));
+        params.push_back(new Parameter<float>("kd_insole", &kd_insole, "damping for insole"));
+        params.push_back(new Parameter<float>("kl_insole", &kl_insole, "linear stiffness coefficient for insole"));
+        params.push_back(new Parameter<float>("mass_insole", &mass_insole, "mass for insole"));
+        params.push_back(new Parameter<int>("n_nodes_bending", &n_nodes_bending, "nodes for bending insole"));
+
+
+
+
     }
 };
